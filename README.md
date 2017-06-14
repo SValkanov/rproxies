@@ -1,4 +1,4 @@
-rproxies ![Ruby >=1.9.3](https://img.shields.io/badge/Ruby-%3E%3D1.9.3-green.svg) [![License](https://img.shields.io/github/license/mashape/apistatus.svg)](https://github.com/SValkanov/rproxies/LICENSE.txt)
+rproxies ![Ruby >=1.9.3](https://img.shields.io/badge/Ruby-%3E%3D1.9.3-green.svg) [![License](https://img.shields.io/github/license/mashape/apistatus.svg)](https://github.com/SValkanov/rproxies/blob/master/LICENSE.txt)
 ====
 
 Kind of translation of [fetch-some-proxies](https://github.com/stamparm/fetch-some-proxies) by [stamparm](https://github.com/stamparm)
