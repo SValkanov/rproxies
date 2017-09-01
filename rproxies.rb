@@ -4,7 +4,7 @@ require 'open-uri'
 require 'time'
 require 'csv'
 require 'optparse'
-require 'parallel'
+require 'thread'
 
 def banner
   "
@@ -181,6 +181,22 @@ rescue
   abort
 end
 
+def parallel_run proxies
+  queue = Queue.new
+  proxies.each{|proxy| queue << proxy }
+
+  running_threads = []
+  threads.times do
+      running_threads << Thread.new do
+        while (proxy = queue.pop(true) rescue nil)
+          proxy_verification proxy
+        end
+      end
+  end
+
+  running_threads.each {|t| t.join }
+end
+
 def run
   puts "#{banner}\n\n"
   input_options
@@ -188,7 +204,7 @@ def run
   initialize_ifconfig
   proxies = retrieve_proxies
   puts "[i] testing #{proxies.length} proxies (#{threads} threads)...\n\n"
-  Parallel.map(proxies, in_threads: threads) { |proxy| proxy_verification proxy }
+  parallel_run proxies
   csv.rewind if handler; puts "\n[i] finished."
 end
 
