@@ -15,4 +15,4 @@ Ruby version 1.9.3 or higher.
 
 gem [parallel](https://github.com/grosser/parallel)
 
-In future there will be branch with no dependencies.
+[Branch with no dependencies.](https://github.com/SValkanov/rproxies/tree/no_dependencies)
