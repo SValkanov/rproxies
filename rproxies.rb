@@ -19,7 +19,7 @@ def banner
 end
 
 def version
-  '1.1.0'
+  '1.1.1'
 end
 
 def user_agent
@@ -54,10 +54,6 @@ end
 
 def anonimity_levels
   { 'elite' => "#{green 'high'}", 'anonymous' => "#{yellow 'medium'}", 'transparent' => 'low' }
-end
-
-def anonimity_color
-  { 'elite' => 'green', 'anonymous' => 'yellow', 'transparent' => 'gray' }
 end
 
 def proxy_list_url
