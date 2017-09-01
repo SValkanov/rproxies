@@ -15,20 +15,21 @@ def banner
   88        88.  .88 88       88.  .88  .d88b.  88 88.  ...       88
   dP        88Y888P' dP       `88888P' dP'  `dP dP `88888P' `88888P'
             88
-            dP                                                       v#{version}"
+            dP                                                      v#{version}"
 end
 
 def version
-  "1.0.0"
+  '1.1.0'
 end
 
 def user_agent
-  fixed_curl_minor, fixed_curl_revision = curl_minor, curl_revision
+  fixed_curl_minor = curl_minor
+  fixed_curl_revision = curl_revision
   "curl/7.#{fixed_curl_minor}.#{fixed_curl_revision} (x86_64-pc-linux-gnu) libcurl/7.#{fixed_curl_minor}.#{fixed_curl_revision} OpenSSL/0.9.8#{openssl_revision} zlib/1.2.#{zlib_revision}"
 end
 
 def referer
-  "https://hidester.com/proxylist/"
+  'https://hidester.com/proxylist/'
 end
 
 def curl_minor
@@ -52,15 +53,19 @@ def random
 end
 
 def anonimity_levels
-  {"elite" => "high", "anonymous" => "medium", "transparent" => "low"}
+  { 'elite' => "#{green 'high'}", 'anonymous' => "#{yellow 'medium'}", 'transparent' => 'low' }
+end
+
+def anonimity_color
+  { 'elite' => 'green', 'anonymous' => 'yellow', 'transparent' => 'gray' }
 end
 
 def proxy_list_url
-  "https://hidester.com/proxydata/php/data.php?mykey=csv&gproxy=2"
+  'https://hidester.com/proxydata/php/data.php?mykey=csv&gproxy=2'
 end
 
 def ifconfig_candidates
-  ["https://ifconfig.co/ip", "https://api.ipify.org/?format=text", "https://ifconfig.io/ip", "https://ifconfig.minidump.info/ip", "https://myexternalip.com/raw", "https://wtfismyip.com/text"]
+  ['https://ifconfig.co/ip', 'https://api.ipify.org/?format=text', 'https://ifconfig.io/ip', 'https://ifconfig.minidump.info/ip', 'https://myexternalip.com/raw', 'https://wtfismyip.com/text']
 end
 
 def rotation_chars
@@ -83,33 +88,47 @@ def handler
   input_options[:dump]
 end
 
+def colorize text, color_code
+  "\e[#{color_code}m#{text}\e[0m"
+end
+
+def green text
+  colorize text, 32
+end
+
+def yellow text
+  colorize text, 33
+end
+
 def csv
-  @csv ||= CSV.new(File.new(handler, "wb"), headers: ['Proxy', 'Latency', 'Country', 'Anonimity'], write_headers: true)
+  @csv ||= CSV.new(File.new(handler, 'wb'), headers: %w[Proxy Latency Country Anonimity], write_headers: true)
   @csv
 end
 
-def is_ip?(ip)
-  !!IPAddr.new(ip) rescue false
+def ip?(ip)
+  !!IPAddr.new(ip)
+rescue
+  false
 end
 
 def start_loading_progress
-  Thread.new{
+  Thread.new do
     counter = [0]
-    while true
+    loop do
       counter[0] += 1
-      print ("\r#{rotation_chars[counter[0] % rotation_chars.length]}\r")
+      print "\r#{rotation_chars[counter[0] % rotation_chars.length]}\r"
       sleep 0.2
     end
-  }
+  end
 end
 
-def retrieve(url, headers={'User-agent' => user_agent, 'Referer' => ''}, proxy=nil)
+def retrieve(url, headers = { 'User-agent' => user_agent, 'Referer' => '' }, proxy = nil)
   begin
-    retval =  open(url, proxy: proxy, read_timeout: timeout_option,
-      'User-Agent' => headers['User-agent'],
-      'Referer' => headers['Referer']).read
-  rescue => e
-    retval = e
+    retval = open(url, proxy: proxy, read_timeout: timeout_option,
+                       'User-Agent' => headers['User-agent'],
+                       'Referer' => headers['Referer']).read
+  rescue => error
+    retval = error
   end
   retval
 end
@@ -117,7 +136,7 @@ end
 def retrieve_proxies
   puts '[i] retrieving list of proxies...'
   begin
-    proxies = JSON.parse(retrieve(proxy_list_url, headers={"User-agent" => user_agent, "Referer" => referer})).shuffle!
+    JSON.parse(retrieve(proxy_list_url, { 'User-agent' => user_agent, 'Referer' => referer })).shuffle!
   rescue
     puts '[!] something went wrong during the proxy list retrieval/parsing. Please check your network settings and try again'
     abort
@@ -128,29 +147,25 @@ def initialize_ifconfig
   puts '[i] initial testing...'
   ifconfig_candidates.each do |candidate|
     result = retrieve(candidate)
-    if is_ip? result
+    if ip? result
       @ifconfig_url = candidate
       break
     end
   end
 end
 
-def proxy_verification proxy
-  begin
-    proxy_ip = proxy['IP']
-    proxy_country = proxy['country']
-    proxy_anonimity = proxy['anonymity']
-    proxy_url = "#{proxy['type']}://#{proxy_ip}:#{proxy['PORT']}"
-    start = Time.now
-    result = retrieve(@ifconfig_url, headers={"User-agent" => user_agent, "Referer" => ''}, proxy=proxy_url)
-    if result == proxy_ip
-      latency = (Time.now - start)
-      puts "#{proxy_url}#{' ' * (32 - proxy_url.length)} # latency: #{latency.round(2)} sec; country: #{proxy_country}; anonimity: #{proxy_anonimity}(#{anonimity_levels[proxy_anonimity.downcase]})\n"
-      csv << [proxy_url, latency, proxy_country, anonimity_levels[proxy_anonimity.downcase]] if handler
-    end
-  rescue
-    return
+def proxy_verification(proxy)
+  proxy_url = "#{proxy['type']}://#{proxy['IP']}:#{proxy['PORT']}"
+  start = Time.now
+  anonimity_level = anonimity_levels[proxy['anonymity'].downcase]
+  result = retrieve(@ifconfig_url, { 'User-agent' => user_agent, 'Referer' => '' }, proxy_url)
+  if result == proxy['IP']
+    latency = (Time.now - start)
+    puts "#{proxy_url}#{' ' * (32 - proxy_url.length)} # latency: #{latency.round(2)} sec; country: #{proxy['country']}; anonimity: #{proxy['anonymity']}(#{anonimity_level})\n"
+    csv << [proxy_url, latency, proxy['country'], anonimity_level] if handler
   end
+rescue
+  return
 end
 
 def input_options
@@ -158,18 +173,16 @@ def input_options
 end
 
 def parse_flags
-  begin
-    options = {}
-    OptionParser.new do |opt|
-      opt.on('--timeout Time to wait each request to respond (default 10s)') { |o| options[:timeout] = o }
-      opt.on('--threads Number of scanning threads (default 10)') { |o| options[:threads] = o }
-      opt.on('--dump    Path to write the results in csv (e.g. "/home/output.csv")')  { |o| options[:dump] = o }
-    end.parse!
-    return options
-  rescue
-    puts "[!] Use '-h' to see available options\n"
-    abort
-  end
+  options = {}
+  OptionParser.new do |opt|
+    opt.on('--timeout Time to wait each request to respond (default 10s)') { |o| options[:timeout] = o }
+    opt.on('--threads Number of scanning threads (default 10)') { |o| options[:threads] = o }
+    opt.on('--dump    Path to write the results in csv (e.g. "/home/output.csv")') { |o| options[:dump] = o }
+  end.parse!
+  return options
+rescue
+  puts "[!] Use '-h' to see available options\n"
+  abort
 end
 
 def run
@@ -183,6 +196,6 @@ def run
   csv.rewind if handler; puts "\n[i] finished."
 end
 
-trap("SIGINT") { csv.rewind if handler;puts "\n\r[!] Ctrl-C pressed\r"; exit}
+trap('SIGINT') { csv.rewind if handler; puts "\n\r[!] Ctrl-C pressed\r"; exit }
 
 run
