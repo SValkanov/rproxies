@@ -19,17 +19,13 @@ def banner
 end
 
 def version
-  '1.1.1'
+  '1.2.1'
 end
 
 def user_agent
   fixed_curl_minor = curl_minor
   fixed_curl_revision = curl_revision
   "curl/7.#{fixed_curl_minor}.#{fixed_curl_revision} (x86_64-pc-linux-gnu) libcurl/7.#{fixed_curl_minor}.#{fixed_curl_revision} OpenSSL/0.9.8#{openssl_revision} zlib/1.2.#{zlib_revision}"
-end
-
-def referer
-  'https://hidester.com/proxylist/'
 end
 
 def curl_minor
@@ -53,11 +49,11 @@ def random
 end
 
 def anonimity_levels
-  { 'elite' => "#{green 'high'}", 'anonymous' => "#{yellow 'medium'}", 'transparent' => 'low' }
+  { 'high' => "#{green 'elite'}", 'medium' => "#{yellow 'anonymous'}", 'low' => 'transparent' }
 end
 
 def proxy_list_url
-  'https://hidester.com/proxydata/php/data.php?mykey=csv&gproxy=2'
+  'https://raw.githubusercontent.com/stamparm/aux/master/fetch-some-list.txt'
 end
 
 def ifconfig_candidates
@@ -118,11 +114,10 @@ def start_loading_progress
   end
 end
 
-def retrieve(url, headers = { 'User-agent' => user_agent, 'Referer' => '' }, proxy = nil)
+def retrieve(url, headers = { 'User-agent' => user_agent }, proxy = nil)
   begin
     retval = open(url, proxy: proxy, read_timeout: timeout_option,
-                       'User-Agent' => headers['User-agent'],
-                       'Referer' => headers['Referer']).read
+                       'User-Agent' => headers['User-agent']).read
   rescue => error
     retval = error
   end
@@ -132,7 +127,7 @@ end
 def retrieve_proxies
   puts '[i] retrieving list of proxies...'
   begin
-    JSON.parse(retrieve(proxy_list_url, { 'User-agent' => user_agent, 'Referer' => referer })).shuffle!
+    JSON.parse(retrieve(proxy_list_url, { 'User-agent' => user_agent })).shuffle!
   rescue
     puts '[!] something went wrong during the proxy list retrieval/parsing. Please check your network settings and try again'
     abort
@@ -151,11 +146,11 @@ def initialize_ifconfig
 end
 
 def proxy_verification(proxy)
-  proxy_url = "#{proxy['type']}://#{proxy['IP']}:#{proxy['PORT']}"
+  proxy_url = "#{proxy['proto']}://#{proxy['ip']}:#{proxy['port']}"
   start = Time.now
-  anonimity_level = anonimity_levels[proxy['anonymity'].downcase]
-  result = retrieve(@ifconfig_url, { 'User-agent' => user_agent, 'Referer' => '' }, proxy_url)
-  if result == proxy['IP']
+  anonimity_level = anonimity_levels[proxy['anonymity']]
+  result = retrieve(@ifconfig_url, { 'User-agent' => user_agent }, proxy_url)
+  if result == proxy['ip']
     latency = (Time.now - start)
     puts "#{proxy_url}#{' ' * (32 - proxy_url.length)} # latency: #{latency.round(2)} sec; country: #{proxy['country']}; anonimity: #{proxy['anonymity']}(#{anonimity_level})\n"
     csv << [proxy_url, latency, proxy['country'], anonimity_level] if handler
