@@ -1,9 +1,9 @@
 require 'json'
 require 'ipaddr'
-require 'open-uri'
 require 'time'
 require 'csv'
 require 'optparse'
+require 'open3'
 require 'parallel'
 
 def banner
@@ -103,6 +103,18 @@ rescue
   false
 end
 
+def curl_requests url, proxy
+  {
+    true => "curl -m #{timeout_option} -A \"#{user_agent}\" #{url}",
+    false => "curl -m #{timeout_option} -A \"#{user_agent}\" --proxy #{proxy} #{url}"
+  }
+end
+
+def curl_request(url, proxy = nil)
+  curl_requests_list = curl_requests url, proxy
+  curl_requests_list[proxy.nil?]
+end
+
 def start_loading_progress
   Thread.new do
     counter = [0]
@@ -116,8 +128,8 @@ end
 
 def retrieve(url, headers = { 'User-agent' => user_agent }, proxy = nil)
   begin
-    retval = open(url, proxy: proxy, read_timeout: timeout_option,
-                       'User-Agent' => headers['User-agent']).read
+    stdin, stdout, stderr, wait_thr1 = Open3.popen3(curl_request(url, proxy))
+    retval = stdout.read
   rescue => error
     retval = error
   end
