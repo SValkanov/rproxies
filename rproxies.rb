@@ -80,6 +80,14 @@ def handler
   input_options[:dump]
 end
 
+def countries
+  input_options[:countries] || {}
+end
+
+def anonymity
+  input_options[:anonymity] || {}
+end
+
 def colorize text, color_code
   "\e[#{color_code}m#{text}\e[0m"
 end
@@ -139,11 +147,22 @@ end
 def retrieve_proxies
   puts '[i] retrieving list of proxies...'
   begin
-    JSON.parse(retrieve(proxy_list_url, { 'User-agent' => user_agent })).shuffle!
+    ret = JSON.parse(retrieve(proxy_list_url, { 'User-agent' => user_agent })).shuffle!
   rescue
     puts '[!] something went wrong during the proxy list retrieval/parsing. Please check your network settings and try again'
     abort
   end
+
+  # Country Filter
+  if countries.length > 0 and not countries.include? 'all'
+    ret = ret.select { |proxy| countries.include? proxy['country'] }
+  end
+
+  # Anonymity Filter
+  if anonymity.length > 0 and not anonymity.include? 'all'
+    ret = ret.select { |proxy| anonymity.include? proxy['anonymity'] }
+  end
+  ret
 end
 
 def initialize_ifconfig
@@ -164,7 +183,7 @@ def proxy_verification(proxy)
   result = retrieve(@ifconfig_url, { 'User-agent' => user_agent }, proxy_url)
   if result == proxy['ip']
     latency = (Time.now - start)
-    puts "#{proxy_url}#{' ' * (32 - proxy_url.length)} # latency: #{latency.round(2)} sec; country: #{proxy['country']}; anonimity: #{proxy['anonymity']}(#{anonimity_level})\n"
+    puts "#{proxy_url}#{' ' * (32 - proxy_url.length)} # latency: #{latency.round(2)} sec; country: #{proxy['country']}; anonymity: #{proxy['anonymity']}(#{anonimity_level})\n"
     csv << [proxy_url, latency, proxy['country'], anonimity_level] if handler
   end
 rescue
@@ -181,6 +200,8 @@ def parse_flags
     opt.on('--timeout Time to wait each request to respond (default 10s)') { |o| options[:timeout] = o }
     opt.on('--threads Number of scanning threads (default 10)') { |o| options[:threads] = o }
     opt.on('--dump    Path to write the results in csv (e.g. "/home/output.csv")') { |o| options[:dump] = o }
+    opt.on('--anonymity Shows only proxies belonging to anonymity classes in the given list (default \'all\')') { |o| options[:anonymity] = o.split(',') }
+    opt.on('--countries Shows only proxies belonging to countries in the given list (default \'all\')') { |o| options[:countries] = o.split(',') }
   end.parse!
   return options
 rescue
