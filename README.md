@@ -6,9 +6,14 @@ Simple Ruby script for fetching "some" (usable) proxies. It fetches (daily) list
 
 Why should you use it? Well, if you've ever used free proxy lists around you'll know the pain of finding actually working proxies. This tool will automatically do the list fetching and proxy testing for you.
 
-![fetch](https://user-images.githubusercontent.com/8790422/31039634-c7fc66e6-a587-11e7-8b7d-2132a3f078ac.png)
+![fetch](https://user-images.githubusercontent.com/8790422/31041427-bd461164-a59d-11e7-9d31-00c97fb07b8b.png)
 
 Requirements
 ----
 
 Ruby version 1.9.3 or higher.
+
+Donations
+----
+
+[&#x0243;itcoin](bitcoin:3CbdevVXBjQDUxq4Uvk3QEwydsULTag6j6) `3CbdevVXBjQDUxq4Uvk3QEwydsULTag6j6`
