@@ -19,7 +19,7 @@ def banner
 end
 
 def version
-  '1.2.1'
+  '2.0.0'
 end
 
 def user_agent
