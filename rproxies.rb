@@ -80,6 +80,14 @@ def handler
   input_options[:dump]
 end
 
+def country_filter
+  input_options[:country]
+end
+
+def anonymity_filter
+  input_options[:anonymity]
+end
+
 def colorize text, color_code
   "\e[#{color_code}m#{text}\e[0m"
 end
@@ -139,11 +147,20 @@ end
 def retrieve_proxies
   puts '[i] retrieving list of proxies...'
   begin
-    JSON.parse(retrieve(proxy_list_url, { 'User-agent' => user_agent })).shuffle!
+    ret = JSON.parse(retrieve(proxy_list_url, { 'User-agent' => user_agent })).shuffle!
   rescue
     puts '[!] something went wrong during the proxy list retrieval/parsing. Please check your network settings and try again'
     abort
   end
+
+  if country_filter
+    ret.select! { |proxy| country_filter.include? proxy['country'].downcase }
+  end
+
+  if anonymity_filter
+    ret.select! { |proxy| anonymity_filter.include? proxy['anonymity'] }
+  end
+  ret
 end
 
 def initialize_ifconfig
@@ -164,7 +181,7 @@ def proxy_verification(proxy)
   result = retrieve(@ifconfig_url, { 'User-agent' => user_agent }, proxy_url)
   if result == proxy['ip']
     latency = (Time.now - start)
-    puts "#{proxy_url}#{' ' * (32 - proxy_url.length)} # latency: #{latency.round(2)} sec; country: #{proxy['country']}; anonimity: #{proxy['anonymity']}(#{anonimity_level})\n"
+    puts "#{proxy_url}#{' ' * (32 - proxy_url.length)} # latency: #{latency.round(2)} sec; country: #{proxy['country']}; anonymity: #{proxy['anonymity']}(#{anonimity_level})\n"
     csv << [proxy_url, latency, proxy['country'], anonimity_level] if handler
   end
 rescue
@@ -181,6 +198,8 @@ def parse_flags
     opt.on('--timeout Time to wait each request to respond (default 10s)') { |o| options[:timeout] = o }
     opt.on('--threads Number of scanning threads (default 10)') { |o| options[:threads] = o }
     opt.on('--dump    Path to write the results in csv (e.g. "/home/output.csv")') { |o| options[:dump] = o }
+    opt.on('--anonymity Filtering by anonymity (e.g. "medium|high")') { |o| options[:anonymity] = o.split('|').map(&:downcase) }
+    opt.on('--country Filtering by country (e.g. "china|brazil")') { |o| options[:country] = o.split('|').map(&:downcase) }
   end.parse!
   return options
 rescue
