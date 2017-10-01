@@ -80,12 +80,12 @@ def handler
   input_options[:dump]
 end
 
-def countries
-  input_options[:countries] || {}
+def country_filter
+  input_options[:country]
 end
 
-def anonymity
-  input_options[:anonymity] || {}
+def anonymity_filter
+  input_options[:anonymity]
 end
 
 def colorize text, color_code
@@ -153,14 +153,12 @@ def retrieve_proxies
     abort
   end
 
-  # Country Filter
-  if countries.length > 0 and not countries.include? 'all'
-    ret = ret.select { |proxy| countries.include? proxy['country'] }
+  if country_filter
+    ret.select! { |proxy| country_filter.include? proxy['country'].downcase }
   end
 
-  # Anonymity Filter
-  if anonymity.length > 0 and not anonymity.include? 'all'
-    ret = ret.select { |proxy| anonymity.include? proxy['anonymity'] }
+  if anonymity_filter
+    ret.select! { |proxy| anonymity_filter.include? proxy['anonymity'] }
   end
   ret
 end
@@ -200,8 +198,8 @@ def parse_flags
     opt.on('--timeout Time to wait each request to respond (default 10s)') { |o| options[:timeout] = o }
     opt.on('--threads Number of scanning threads (default 10)') { |o| options[:threads] = o }
     opt.on('--dump    Path to write the results in csv (e.g. "/home/output.csv")') { |o| options[:dump] = o }
-    opt.on('--anonymity Shows only proxies belonging to anonymity classes in the given list (default \'all\')') { |o| options[:anonymity] = o.split(',') }
-    opt.on('--countries Shows only proxies belonging to countries in the given list (default \'all\')') { |o| options[:countries] = o.split(',') }
+    opt.on('--anonymity Filtering by anonymity (e.g. "medium|high")') { |o| options[:anonymity] = o.split('|').map(&:downcase) }
+    opt.on('--country Filtering by country (e.g. "china|brazil")') { |o| options[:country] = o.split('|').map(&:downcase) }
   end.parse!
   return options
 rescue
