@@ -19,7 +19,7 @@ def banner
 end
 
 def version
-  '2.3.0'
+  '2.3.1'
 end
 
 def user_agent
@@ -190,7 +190,7 @@ def proxy_verification(proxy)
   if result == proxy['ip']
     latency = (Time.now - start)
     puts "#{proxy_url}#{' ' * (32 - proxy_url.length)} # latency: #{latency.round(2)} sec; country: #{proxy['country']}; anonymity: #{proxy['anonymity']}(#{anonimity_level})\n"
-    csv << [proxy_url, latency, proxy['country'], anonimity_level] if handler
+    csv << [proxy_url, latency, proxy['country'], anonimity_level.gsub(/\e\[(\d+)m/, '')] if handler
   end
 rescue
   return
