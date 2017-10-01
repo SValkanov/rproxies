@@ -19,7 +19,7 @@ def banner
 end
 
 def version
-  '2.1.0'
+  '2.3.0'
 end
 
 def user_agent
@@ -86,6 +86,10 @@ end
 
 def anonymity_filter
   input_options[:anonymity]
+end
+
+def type_filter
+  input_options[:type]
 end
 
 def colorize text, color_code
@@ -160,6 +164,10 @@ def retrieve_proxies
   if anonymity_filter
     ret.select! { |proxy| anonymity_filter.include? proxy['anonymity'] }
   end
+
+  if type_filter
+    ret.select! { |proxy| type_filter.include? proxy['proto'] }
+  end
   ret
 end
 
@@ -195,11 +203,12 @@ end
 def parse_flags
   options = {}
   OptionParser.new do |opt|
-    opt.on('--timeout Time to wait each request to respond (default 10s)') { |o| options[:timeout] = o }
-    opt.on('--threads Number of scanning threads (default 10)') { |o| options[:threads] = o }
-    opt.on('--dump    Path to write the results in csv (e.g. "/home/output.csv")') { |o| options[:dump] = o }
+    opt.on('--timeout   Time to wait each request to respond (default 10s)') { |o| options[:timeout] = o }
+    opt.on('--threads   Number of scanning threads (default 10)') { |o| options[:threads] = o }
+    opt.on('--dump      Path to write the results in csv (e.g. "/home/output.csv")') { |o| options[:dump] = o }
     opt.on('--anonymity Filtering by anonymity (e.g. "medium|high")') { |o| options[:anonymity] = o.split('|').map(&:downcase) }
-    opt.on('--country Filtering by country (e.g. "china|brazil")') { |o| options[:country] = o.split('|').map(&:downcase) }
+    opt.on('--country   Filtering by country (e.g. "china|brazil")') { |o| options[:country] = o.split('|').map(&:downcase) }
+    opt.on('--type      Filtering by type (e.g. "http|https")') { |o| options[:type] = o.split('|').map(&:downcase) }
   end.parse!
   return options
 rescue
