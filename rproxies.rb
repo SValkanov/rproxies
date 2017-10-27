@@ -57,7 +57,7 @@ def proxy_list_url
 end
 
 def ifconfig_candidates
-  ['https://ifconfig.co/ip', 'https://api.ipify.org/?format=text', 'https://ifconfig.io/ip', 'https://ifconfig.minidump.info/ip', 'https://myexternalip.com/raw', 'https://wtfismyip.com/text']
+  ['https://ifconfig.co/ip', 'https://api.ipify.org/?format=text', 'https://ifconfig.io/ip', 'https://myexternalip.com/raw', 'https://wtfismyip.com/text', 'https://icanhazip.com/', 'https://ipv4bot.whatismyipaddress.com/', 'https://ip4.seeip.org']
 end
 
 def rotation_chars
