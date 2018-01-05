@@ -13,7 +13,3 @@ Requirements
 
 Ruby version 1.9.3 or higher.
 
-Donations
-----
-
-[&#x0243;itcoin](bitcoin:3CbdevVXBjQDUxq4Uvk3QEwydsULTag6j6) `3CbdevVXBjQDUxq4Uvk3QEwydsULTag6j6`
