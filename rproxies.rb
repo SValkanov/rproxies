@@ -19,7 +19,7 @@ def banner
 end
 
 def version
-  '2.3.1'
+  '2.3.2'
 end
 
 def user_agent
@@ -90,6 +90,10 @@ end
 
 def type_filter
   input_options[:type]
+end
+
+def port_filter
+  input_options[:port]
 end
 
 def colorize text, color_code
@@ -168,6 +172,10 @@ def retrieve_proxies
   if type_filter
     ret.select! { |proxy| type_filter.include? proxy['proto'] }
   end
+
+  if port_filter
+    ret.select! { |proxy| port_filter.include? proxy['port'] }
+  end
   ret
 end
 
@@ -205,10 +213,11 @@ def parse_flags
   OptionParser.new do |opt|
     opt.on('--timeout   Time to wait each request to respond (default 10s)') { |o| options[:timeout] = o }
     opt.on('--threads   Number of scanning threads (default 10)') { |o| options[:threads] = o }
-    opt.on('--dump      Path to write the results in csv (e.g. "/home/output.csv")') { |o| options[:dump] = o }
-    opt.on('--anonymity Filtering by anonymity (e.g. "medium|high")') { |o| options[:anonymity] = o.split('|').map(&:downcase) }
-    opt.on('--country   Filtering by country (e.g. "china|brazil")') { |o| options[:country] = o.split('|').map(&:downcase) }
-    opt.on('--type      Filtering by type (e.g. "http|https")') { |o| options[:type] = o.split('|').map(&:downcase) }
+    opt.on('--dump      Path to write the results in csv (e.g. --dump="/output.csv")') { |o| options[:dump] = o }
+    opt.on('--anonymity Filtering by anonymity (e.g. --anonymity="medium,high")') { |o| options[:anonymity] = o.delete(' ').split(',').map(&:downcase) }
+    opt.on('--country   Filtering by country (e.g. --country="china,brazil")') { |o| options[:country] = o.delete(' ').split(',').map(&:downcase) }
+    opt.on('--type      Filtering by type (e.g. --type="http,https")') { |o| options[:type] = o.delete(' ').split(',').map(&:downcase) }
+    opt.on('--port      Filtering by port (e.g. --port="8000,8080")') { |o| options[:port] = o.delete(' ').split(',').map(&:to_i) }
   end.parse!
   return options
 rescue
