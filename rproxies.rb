@@ -19,13 +19,11 @@ def banner
 end
 
 def version
-  '2.3.2'
+  '2.3.3'
 end
 
 def user_agent
-  fixed_curl_minor = curl_minor
-  fixed_curl_revision = curl_revision
-  "curl/7.#{fixed_curl_minor}.#{fixed_curl_revision} (x86_64-pc-linux-gnu) libcurl/7.#{fixed_curl_minor}.#{fixed_curl_revision} OpenSSL/0.9.8#{openssl_revision} zlib/1.2.#{zlib_revision}"
+  "curl/7.#{curl_minor}.#{curl_revision} (x86_64-pc-linux-gnu) libcurl/7.#{curl_minor}.#{curl_revision} OpenSSL/0.9.8#{openssl_revision} zlib/1.2.#{zlib_revision}"
 end
 
 def curl_minor
@@ -201,7 +199,6 @@ def proxy_verification(proxy)
     csv << [proxy_url, latency, proxy['country'], anonimity_level.gsub(/\e\[(\d+)m/, '')] if handler
   end
 rescue
-  return
 end
 
 def input_options
@@ -238,7 +235,7 @@ def parallel_run proxies
       end
   end
 
-  running_threads.each {|t| t.join }
+  running_threads.each { |t| t.join }
 end
 
 def run
