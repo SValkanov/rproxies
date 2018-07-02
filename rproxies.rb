@@ -1,3 +1,5 @@
+#!/usr/bin/env ruby
+
 require 'json'
 require 'ipaddr'
 require 'open3'
