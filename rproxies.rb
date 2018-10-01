@@ -7,6 +7,7 @@ require 'time'
 require 'csv'
 require 'optparse'
 require 'thread'
+require 'open-uri'
 
 def banner
   "
@@ -21,7 +22,7 @@ def banner
 end
 
 def version
-  '2.3.3'
+  '2.4.3'
 end
 
 def user_agent
@@ -94,6 +95,10 @@ end
 
 def port_filter
   input_options[:port]
+end
+
+def update?
+  input_options[:update]
 end
 
 def colorize text, color_code
@@ -217,11 +222,24 @@ def parse_flags
     opt.on('--country   Filtering by country (e.g. --country="china,brazil")') { |o| options[:country] = o.delete(' ').split(',').map(&:downcase) }
     opt.on('--type      Filtering by type (e.g. --type="http,https")') { |o| options[:type] = o.delete(' ').split(',').map(&:downcase) }
     opt.on('--port      Filtering by port (e.g. --port="8000,8080")') { |o| options[:port] = o.delete(' ').split(',').map(&:to_i) }
+    opt.on('--update    Update the source (e.g. --update="true")') { |o| options[:update] = o }
   end.parse!
   return options
 rescue
   puts "[!] Use '-h' to see available options\n"
   abort
+end
+
+def update_source
+  puts "[i] Started updating...\n"
+  begin
+    download = open('https://raw.githubusercontent.com/SValkanov/rproxies/master/rproxies.rb')
+    IO.copy_stream(download, 'rproxies.rb')
+    puts "[i] Successfully updated\n"
+  rescue
+    puts "[!] Something went wrong during the update process\n"
+  end
+  exit
 end
 
 def parallel_run proxies
@@ -244,6 +262,7 @@ def run
   puts "#{banner}\n\n"
   input_options
   start_loading_progress
+  update_source if update?
   initialize_ifconfig
   proxies = retrieve_proxies
   puts "[i] testing #{proxies.length} proxies (#{threads} threads)...\n\n"
