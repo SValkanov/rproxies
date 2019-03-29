@@ -1,7 +1,6 @@
 #!/usr/bin/env ruby
 
 require 'json'
-require 'ipaddr'
 require 'open3'
 require 'time'
 require 'csv'
@@ -22,7 +21,7 @@ def banner
 end
 
 def version
-  '2.4.3'
+  '2.4.5'
 end
 
 def user_agent
@@ -58,7 +57,11 @@ def proxy_list_url
 end
 
 def ifconfig_candidates
-  ['https://ifconfig.co/ip', 'https://api.ipify.org/?format=text', 'https://ifconfig.io/ip', 'https://myexternalip.com/raw', 'https://wtfismyip.com/text', 'https://icanhazip.com/', 'https://ipv4bot.whatismyipaddress.com/', 'https://ip4.seeip.org']
+  ['https://api.ipify.org/?format=text', 'https://myexternalip.com/raw', 'https://wtfismyip.com/text', 'https://icanhazip.com/', 'https://ipv4bot.whatismyipaddress.com/', 'https://ip4.seeip.org']
+end
+
+def random_ifconfig_candidate
+  ifconfig_candidates.sample
 end
 
 def rotation_chars
@@ -118,12 +121,6 @@ def csv
   @csv
 end
 
-def ip?(ip)
-  !!IPAddr.new(ip)
-rescue
-  false
-end
-
 def curl_requests url, proxy
   {
     true => "curl -m #{timeout_option} -A \"#{user_agent}\" #{url}",
@@ -181,25 +178,25 @@ def retrieve_proxies
   if port_filter
     ret.select! { |proxy| port_filter.include? proxy['port'] }
   end
+
+  unless ret.any?
+    puts '[!] no proxies found.'
+    exit
+  end
+
   ret
 end
 
 def initialize_ifconfig
   puts '[i] initial testing...'
-  ifconfig_candidates.each do |candidate|
-    result = retrieve(candidate)
-    if ip? result
-      @ifconfig_url = candidate
-      break
-    end
-  end
+  result = retrieve(random_ifconfig_candidate)
 end
 
 def proxy_verification(proxy)
   proxy_url = "#{proxy['proto']}://#{proxy['ip']}:#{proxy['port']}"
   start = Time.now
   anonimity_level = anonimity_levels[proxy['anonymity']]
-  result = retrieve(@ifconfig_url, { 'User-agent' => user_agent }, proxy_url)
+  result = retrieve(random_ifconfig_candidate, { 'User-agent' => user_agent }, proxy_url)
   if result == proxy['ip']
     latency = (Time.now - start)
     puts "#{proxy_url}#{' ' * (32 - proxy_url.length)} # latency: #{latency.round(2)} sec; country: #{proxy['country']}; anonimity: #{proxy['anonymity']}(#{anonimity_level})\n"
