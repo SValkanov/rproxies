@@ -21,7 +21,7 @@ def banner
 end
 
 def version
-  '2.4.5'
+  '2.4.6'
 end
 
 def user_agent
@@ -148,6 +148,7 @@ def retrieve(url, headers = { 'User-agent' => user_agent }, proxy = nil)
   begin
     stdin, stdout, stderr, wait_thr1 = Open3.popen3(curl_request(url, proxy))
     retval = stdout.read
+    puts "[!] command 'curl' is not available" if stderr && stderr.read[/not found|not recognized/]
   rescue => error
     retval = error
   end
