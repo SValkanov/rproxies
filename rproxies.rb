@@ -1,5 +1,7 @@
 #!/usr/bin/env ruby
 
+# frozen_string_literal: true
+
 require 'json'
 require 'open3'
 require 'time'
@@ -21,27 +23,11 @@ def banner
 end
 
 def version
-  '2.4.6'
+  '2.4.8'
 end
 
 def user_agent
-  "curl/7.#{curl_minor}.#{curl_revision} (x86_64-pc-linux-gnu) libcurl/7.#{curl_minor}.#{curl_revision} OpenSSL/0.9.8#{openssl_revision} zlib/1.2.#{zlib_revision}"
-end
-
-def curl_minor
-  random.rand(8..22)
-end
-
-def curl_revision
-  random.rand(1..9)
-end
-
-def openssl_revision
-  ('a'..'z').to_a[random.rand(0..25)]
-end
-
-def zlib_revision
-  random.rand(2..6)
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36'
 end
 
 def random
